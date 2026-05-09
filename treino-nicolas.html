@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Treino NL">
+<title>Treino — Nicolas Lima</title>
+<style>
+:root {
+  --bg: #0E0E14;
+  --surface: #1A1A24;
+  --surface2: #22222E;
+  --border: #2E2E3E;
+  --accent: #4EE06E;
+  --accent-dim: #132518;
+  --text: #EBEBF0;
+  --text2: #7878A0;
+  --warn: #F0A030;
+  --warn-dim: #2A1C00;
+  --danger: #E06060;
+  --danger-dim: #2A1010;
+  --blue: #4898F0;
+  --blue-dim: #081828;
+  --purple: #9868E0;
+  --purple-dim: #1A0F2E;
+  --nav-h: 58px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overscroll-behavior: none; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* TOP BAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: calc(var(--safe-t) + 14px) 16px 12px;
+  background: rgba(14,14,20,0.96);
+  border-bottom: 0.5px solid var(--border);
+  z-index: 200;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.topbar h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.4px; }
+.topbar p { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+/* BOTTOM NAV */
+.bnav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--nav-h) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  background: rgba(26,26,36,0.97);
+  border-top: 0.5px solid var(--border);
+  display: flex; z-index: 200;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.nb {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  font-size: 10px; color: var(--text2);
+  background: transparent; border: none; font-family: inherit;
+  padding: 6px 4px; cursor: pointer;
+}
+.nb.active { color: var(--accent); }
+.ni { font-size: 20px; line-height: 1; }
+
+/* SCROLL AREA */
+.main {
+  padding-top: calc(var(--safe-t) + 62px);
+  padding-bottom: calc(var(--nav-h) + var(--safe-b) + 12px);
+}
+.section { display: none; }
+.section.active { display: block; }
+
+/* SAVE BANNER */
+.save-tip {
+  margin: 10px 14px 0;
+  padding: 10px 13px;
+  background: var(--blue-dim);
+  border: 0.5px solid var(--blue);
+  border-radius: 10px;
+  font-size: 12px;
+  color: #80B8FF;
+  line-height: 1.5;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+}
+.save-tip button { background: none; border: none; color: var(--blue); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; flex-shrink: 0; }
+
+/* DAY PILLS */
+.day-scroll {
+  display: flex; gap: 7px;
+  padding: 10px 14px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  border-bottom: 0.5px solid var(--border);
+}
+.day-scroll::-webkit-scrollbar { display: none; }
+.dp {
+  flex-shrink: 0; padding: 7px 14px;
+  border-radius: 20px; font-size: 12px; font-weight: 600;
+  background: var(--surface); color: var(--text2);
+  border: 0.5px solid var(--border); font-family: inherit; cursor: pointer;
+  white-space: nowrap;
+}
+.dp.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+/* EXERCISE LIST */
+.elist { padding: 8px 14px 6px; }
+
+.fhl-warn {
+  background: var(--danger-dim); border: 0.5px solid var(--danger);
+  border-radius: 10px; padding: 9px 13px; margin-bottom: 10px;
+  font-size: 12px; color: #F09090; display: flex; align-items: center; gap: 8px;
+}
+
+.blk-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--text2);
+  margin: 14px 0 7px;
+}
+.blk-label:first-child { margin-top: 4px; }
+
+.ec {
+  background: var(--surface); border-radius: 12px;
+  padding: 11px 13px; margin-bottom: 7px;
+  border: 0.5px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.ec::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+}
+.ec.strength::before { background: var(--accent); }
+.ec.warm::before     { background: #555568; }
+.ec.cardio::before   { background: var(--blue); }
+.ec.fhl::before      { background: var(--danger); }
+.ec.added::before    { background: var(--warn); }
+.ec.core::before     { background: var(--purple); }
+.ec.rsa::before      { background: var(--warn); }
+
+.ec-tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em; padding: 2px 7px; border-radius: 4px; margin-bottom: 5px;
+}
+.tag-a { background: var(--warn-dim); color: var(--warn); }
+.tag-f { background: var(--danger-dim); color: var(--danger); }
+
+.ec-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+.ec-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px; }
+.chip {
+  font-size: 11px; padding: 3px 8px; border-radius: 6px;
+  background: var(--surface2); color: var(--text2); border: 0.5px solid var(--border);
+}
+.chip.hi { color: var(--accent); background: var(--accent-dim); border-color: #1E4828; }
+.ec-note { font-size: 12px; color: var(--text2); line-height: 1.4; font-style: italic; }
+
+/* MOBILITY */
+.mob-tabs {
+  display: flex; padding: 10px 14px; gap: 7px;
+  border-bottom: 0.5px solid var(--border);
+}
+.mt {
+  flex: 1; padding: 8px 4px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; text-align: center;
+  background: var(--surface); color: var(--text2);
+  border: 0.5px solid var(--border); font-family: inherit; cursor: pointer;
+  line-height: 1.4;
+}
+.mt.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+.mc { display: none; padding: 10px 14px; }
+.mc.active { display: block; }
+
+.mob-hdr {
+  background: var(--surface); border-radius: 10px;
+  padding: 10px 13px; margin-bottom: 10px; border: 0.5px solid var(--border);
+}
+.mob-hdr-t { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+.mob-hdr-s { font-size: 11px; color: var(--text2); }
+.mob-note { font-size: 12px; color: var(--text2); font-style: italic; margin-bottom: 12px; line-height: 1.4; }
+
+.mcard {
+  background: var(--surface); border-radius: 12px;
+  padding: 11px 13px; margin-bottom: 7px;
+  border-left: 3px solid var(--border); border-top: 0.5px solid var(--border);
+  border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border);
+}
+.mcard.hip       { border-left-color: var(--warn); }
+.mcard.hamstring { border-left-color: var(--blue); }
+.mcard.ankle     { border-left-color: var(--danger); }
+.mcard.thoracic  { border-left-color: var(--accent); }
+.mcard.hip-flex  { border-left-color: var(--purple); }
+.mcard.full      { border-left-color: #666680; }
+.mcard.glute     { border-left-color: #E08030; }
+.mcard.breath    { border-left-color: var(--accent); }
+
+.mcard-dur {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px;
+  background: var(--surface2); color: var(--text2); margin-bottom: 4px;
+}
+.mcard-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.mcard-spec { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.mcard-cue  { font-size: 12px; color: var(--text2); font-style: italic; line-height: 1.4; }
+
+/* FHL */
+.fhl-wrap { padding: 10px 14px; }
+.fhl-intro {
+  background: var(--danger-dim); border: 0.5px solid var(--danger);
+  border-radius: 10px; padding: 12px 13px; margin-bottom: 14px;
+  font-size: 13px; color: #F09090; line-height: 1.5;
+}
+.fhl-phase {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--text2); margin: 14px 0 8px;
+}
+.fhl-step {
+  display: flex; gap: 11px; align-items: flex-start;
+  background: var(--surface); border-radius: 12px;
+  padding: 11px 13px; margin-bottom: 7px; border: 0.5px solid var(--border);
+}
+.fhl-num {
+  min-width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-dim); color: var(--accent);
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.fhl-step-t { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.fhl-step-d { font-size: 12px; color: var(--text2); line-height: 1.4; }
+.fhl-alert {
+  background: var(--danger-dim); border: 0.5px solid var(--danger);
+  border-radius: 10px; padding: 12px 13px; margin-top: 14px;
+  font-size: 12px; color: #F09090; line-height: 1.7;
+}
+.fhl-alert strong { display: block; font-size: 13px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Nicolas Lima</h1>
+  <p>Condicionamento físico · Intermediário · Pré-época</p>
+</div>
+
+<div class="main">
+
+  <!-- TREINO -->
+  <div class="section active" id="sec-treino">
+    <div class="save-tip" id="stip">
+      <span>Para guardar: <strong>Partilhar</strong> no Safari → "Adicionar ao ecrã de início"</span>
+      <button onclick="document.getElementById('stip').style.display='none'">OK</button>
+    </div>
+    <div class="day-scroll">
+      <button class="dp active" onclick="selDay('seg',this)">Seg — Força</button>
+      <button class="dp" onclick="selDay('ter',this)">Ter — Pliometria</button>
+      <button class="dp" onclick="selDay('qua',this)">Qua — Costas</button>
+      <button class="dp" onclick="selDay('qui',this)">Qui — Pernas</button>
+      <button class="dp" onclick="selDay('sex',this)">Sex — Peito</button>
+      <button class="dp" onclick="selDay('sab',this)">Sáb — Recuperação</button>
+    </div>
+    <div class="elist" id="day-content"></div>
+  </div>
+
+  <!-- MOBILIDADE -->
+  <div class="section" id="sec-mobilidade">
+    <div class="mob-tabs">
+      <button class="mt active" onclick="selMob('manha',this)">Manhã<br>18 min</button>
+      <button class="mt" onclick="selMob('pos',this)">Pós-treino<br>15 min</button>
+      <button class="mt" onclick="selMob('noite',this)">Noite<br>10 min</button>
+    </div>
+    <div class="mc active" id="mc-manha"></div>
+    <div class="mc" id="mc-pos"></div>
+    <div class="mc" id="mc-noite"></div>
+  </div>
+
+  <!-- FHL -->
+  <div class="section" id="sec-fhl">
+    <div class="fhl-wrap" id="fhl-content"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="nb active" onclick="selSec('treino',this)">
+    <span class="ni">💪</span><span>Treino</span>
+  </button>
+  <button class="nb" onclick="selSec('mobilidade',this)">
+    <span class="ni">🧘</span><span>Mobilidade</span>
+  </button>
+  <button class="nb" onclick="selSec('fhl',this)">
+    <span class="ni">🦶</span><span>Tendão FHL</span>
+  </button>
+</nav>
+
+<script>
+const days = {
+  seg: {
+    fhl: true,
+    blocks: [
+      { label:'Aquecimento e mobilidade', exs:[
+        { n:'Mobilidade de Quadril VIII',  s:'2×10', c:'Livre',       r:'30s',  t:'warm' },
+        { n:'Mobilidade de Tornozelo',     s:'2×10', c:'Livre',       r:'30s',  t:'fhl', note:'Foco dorsiflexão com calcanhar fixo — crítico para FHL', tag:'f', tl:'FHL' },
+        { n:'Alongamento Posterior + Mobilidade Escapular', s:'2×10', c:'Livre', r:'30s', t:'warm' },
+      ]},
+      { label:'Bloco principal — potência lower body', exs:[
+        { n:'Agachamento com Barra Hexagonal',  s:'3×10', c:'20 kg/lado',   r:'90s', t:'strength', note:'SUBIR RÁPIDO · SEGURAR DESCIDA · Pisada neutra, evitar valgo de joelho' },
+        { n:'Leg Press Horizontal Unilateral',  s:'4×10', c:'Progressivo',  r:'90s', t:'strength', note:'Fase concêntrica máxima velocidade', tag:'a', tl:'+1 série' },
+        { n:'Flexora na Bola Suíça',            s:'3×10', c:'—',            r:'60s', t:'strength', note:'Subir rápido — controlo do FHL na pisada' },
+        { n:'Frangem unilateral joelhos no step',s:'3×10',c:'—',           r:'90s', t:'strength', note:'SEGURAR DESCIDA — excêntrico nórdico parcial, protege isquiotibiais e FHL' },
+        { n:'Prancha L / Adução de Quadril',    s:'3×1 min/lado', c:'—',   r:'90s', t:'core' },
+      ]},
+      { label:'Panturrilha e tibial', exs:[
+        { n:'Extensão de Panturrilha Máquina',  s:'3×15', c:'40 kg+',   r:'60s', t:'fhl', note:'SOBE RÁPIDO · DESCE DEVAGAR (4-5s) — fase excêntrica protege FHL e Aquiles', tag:'f', tl:'FHL' },
+        { n:'Tibial Anterior',                  s:'3×1 min', c:'—',     r:'60s', t:'fhl', tag:'f', tl:'FHL' },
+        { n:'Bicicleta',                        s:'15 min',  c:'—',     r:'—',   t:'cardio', note:'Finalização aeróbia — FC moderada' },
+      ]},
+    ]
+  },
+  ter: {
+    fhl: true,
+    blocks: [
+      { label:'Aquecimento', exs:[
+        { n:'Alongamento Posterior + Mobilidade Escapular', s:'2×10', c:'—', r:'60s', t:'warm' },
+        { n:'Mobilidade de Quadril VII',                    s:'2×10', c:'—', r:'60s', t:'warm' },
+      ]},
+      { label:'Bloco pliométrico', exs:[
+        { n:'Agachamento com salto com barra',  s:'3×10',        c:'15 kg',    r:'90s', t:'strength', note:'Máxima velocidade na subida · aterrissagem suave antepé→calcanhar' },
+        { n:'Avanço unilateral',               s:'3×10/perna',   c:'—',        r:'90s', t:'strength', note:'Padrão de aceleração/travagem específico futebol' },
+        { n:'Aterrissagem com arranque',       s:'3×10',         c:'—',        r:'90s', t:'strength', note:'Simula bola dividida — estabilizar antes de arrancar' },
+        { n:'Salto lateral unilateral',        s:'3×10/lado',    c:'Livre',    r:'90s', t:'strength', note:'Aterrissagem controlada — monitorar tensão no FHL' },
+        { n:'Swing kettlebell unilateral',     s:'3×8/lado',     c:'5 kg',     r:'90s', t:'strength' },
+        { n:'Tibial Anterior',                 s:'3×15',         c:'5 kg/lado',r:'60s', t:'fhl', tag:'f', tl:'FHL' },
+        { n:'Abdominal Supra na Bola Suíça',   s:'3×20',         c:'—',        r:'60s', t:'core' },
+      ]},
+      { label:'RSA — Repeated Sprint Ability', exs:[
+        { n:'Protocolo RSA', s:'3 séries × 6 sprints 30m', c:'Máxima', r:'30s/sprint · 4min/série', t:'rsa',
+          note:'Registar tempos. Degradação >10% entre sprint 1 e 6 = recuperação insuficiente. Alternativa esteira: 8×[10s 18-20km/h / 20s andar] ×3 rounds', tag:'a', tl:'Adicionado' },
+        { n:'Esteira Trote (recuperação ativa)', s:'20 min', c:'—', r:'—', t:'cardio', note:'FC < 130 bpm' },
+      ]},
+    ]
+  },
+  qua: {
+    fhl: false,
+    blocks: [
+      { label:'Costas', exs:[
+        { n:'Puxada Aberta Barra Reta',     s:'4×12-15', c:'Progredir/série', r:'90s', t:'strength' },
+        { n:'Puxada Neutra Triângulo',      s:'3×8-12',  c:'Alta',            r:'90s', t:'strength' },
+        { n:'Remada Baixa Triângulo',       s:'3×12-15', c:'Progredir/série', r:'60s', t:'strength' },
+        { n:'Crucifixo Inverso Máquina',    s:'3×12',    c:'Progressivo',     r:'90s', t:'strength', note:'Equilíbrio peitoral/dorsal — saúde do ombro para remates' },
+      ]},
+      { label:'Tríceps', exs:[
+        { n:'Tríceps Polia Barra W',               s:'3×12-15', c:'Progredir/série', r:'90s', t:'strength' },
+        { n:'Tríceps Francês Sentado Halteres',    s:'3×12-15', c:'Progressivo',     r:'90s', t:'strength' },
+      ]},
+      { label:'Core funcional', exs:[
+        { n:'Rotação tronco com cabo / medicine ball', s:'3×12/lado', c:'Moderada', r:'60s', t:'core',
+          note:'Padrão rotacional passe/remate — fundamental para médio avançado e extremo', tag:'a', tl:'Novo' },
+        { n:'Prancha lateral com elevação de anca',   s:'3×30s/lado', c:'—',       r:'45s', t:'core', tag:'a', tl:'Novo' },
+        { n:'Abdominal Máquina',                      s:'3×15',       c:'Alta',     r:'90s', t:'core' },
+        { n:'Esteira Trote',                          s:'20 min',     c:'—',        r:'—',   t:'cardio', note:'FC moderada' },
+      ]},
+    ]
+  },
+  qui: {
+    fhl: true,
+    blocks: [
+      { label:'Quadricípites — volume aumentado', exs:[
+        { n:'Cadeira Extensora',         s:'5×12-15', c:'Progredir/série', r:'90s', t:'strength', note:'Corrigir desequilíbrio lower/upper', tag:'a', tl:'+1 série' },
+        { n:'Agachamento Hack Invertido',s:'4×12-15', c:'Progredir/série', r:'90s', t:'strength', tag:'a', tl:'+1 série' },
+      ]},
+      { label:'Posterior e glúteo', exs:[
+        { n:'Mesa Flexora',                      s:'4×12-15', c:'Progredir/série', r:'90s', t:'strength',
+          note:'Pausa excêntrica 3s na descida — força isquiotibial = velocidade e prevenção', tag:'a', tl:'Pausa exc.' },
+        { n:'Stiff pés afastados com Barra Livre',s:'3×12-15',c:'Progressivo',    r:'90s', t:'strength', note:'Amplitude controlada — não forçar se sentir tensão FHL' },
+      ]},
+      { label:'Adutores e abdutores', exs:[
+        { n:'Adução de Quadril Máquina',  s:'3×15', c:'Alta', r:'90s', t:'strength' },
+        { n:'Abdução de Quadril Máquina', s:'3×15', c:'Alta', r:'90s', t:'strength' },
+      ]},
+      { label:'Panturrilha excêntrica — protocolo FHL integrado', exs:[
+        { n:'Calf Raise excêntrico no degrau (unilateral)', s:'3×12/pé', c:'Corpo livre', r:'60s', t:'fhl',
+          note:'Subir bilateral · descer unilateral em 6s. Joelho reto E joelho ligeiramente fletido. Alfredson modificado.', tag:'f', tl:'FHL' },
+        { n:'Tibial Anterior', s:'3×1 min', c:'—', r:'60s', t:'fhl', tag:'f', tl:'FHL' },
+        { n:'Esteira Caminhada', s:'15-30 min', c:'—', r:'—', t:'cardio', note:'Recuperação ativa' },
+      ]},
+    ]
+  },
+  sex: {
+    fhl: false,
+    blocks: [
+      { label:'Peito', exs:[
+        { n:'Banco Supino Reto',              s:'4×8-12',  c:'Subir/série',     r:'120s', t:'strength' },
+        { n:'Supino Inclinado com Halteres',  s:'3×8-12',  c:'Progredir/série', r:'90s',  t:'strength' },
+        { n:'Crucifixo Máquina',              s:'3×15',    c:'Progressivo',     r:'120s', t:'strength' },
+      ]},
+      { label:'Ombros', exs:[
+        { n:'Desenvolvimento com Halteres Sentado',           s:'4×12-15', c:'Alta',        r:'120s', t:'strength' },
+        { n:'Elevação Lateral Unilateral Polia Baixa Neutra', s:'3×12-15', c:'Progressivo', r:'90s',  t:'strength' },
+      ]},
+      { label:'Bíceps', exs:[
+        { n:'Rosca Direta Barra W',    s:'3×8-12',  c:'Progredir/série', r:'90s', t:'strength' },
+        { n:'Rosca Scott Máquina',     s:'3×12-15', c:'Progressivo',     r:'90s', t:'strength' },
+      ]},
+      { label:'Intervalado anaeróbio', exs:[
+        { n:'Esteira Intervalado', s:'10×[1min alta / 1min lenta]', c:'14-16 km/h', r:'—', t:'rsa',
+          note:'1min a 14-16km/h · 1min a 6km/h · 20min total. Progressão: +0,5km/h por semana.', tag:'a', tl:'Adicionado' },
+        { n:'Esteira Caminhada', s:'15-30 min', c:'—', r:'—', t:'cardio', note:'Recuperação ativa' },
+      ]},
+    ]
+  },
+  sab: {
+    fhl: true,
+    blocks: [
+      { label:'Aeróbio base', exs:[
+        { n:'Bicicleta estacionária', s:'25-35 min', c:'Baixa', r:'—', t:'cardio', note:'FC ≤ 130 bpm · sem pressão no antepé, ideal para FHL' },
+      ]},
+      { label:'Protocolo FHL (com calma)', exs:[
+        { n:'Foam roller planta do pé + panturrilha', s:'2-3 min/perna', c:'—', r:'—', t:'fhl', note:'Círculos lentos. Pausa em pontos tensos.', tag:'f', tl:'FHL' },
+        { n:'Calf raise excêntrico no degrau (unilateral)', s:'3×15/pé', c:'Corpo livre', r:'60s', t:'fhl', note:'6s descida. Sem peso extra até semana 3.', tag:'f', tl:'FHL' },
+        { n:'Flexão dos dedos com toalha (towel scrunch)', s:'2×30s/pé', c:'—', r:'—', t:'fhl', note:'Força intrínseca do pé — suporte ao FHL', tag:'f', tl:'FHL' },
+      ]},
+      { label:'Mobilidade global', exs:[
+        { n:'Stretching global membro inferior', s:'20 min', c:'—', r:'—', t:'warm', note:'Isquiotibiais, psoas, gémeos, solear, plantar. Posições 45-60s.' },
+        { n:'Mobilidade torácica e escapular',   s:'10 min', c:'—', r:'—', t:'warm' },
+      ]},
+    ]
+  },
+};
+
+const mob = {
+  manha: {
+    title:'Ativação articular e mobilidade', sub:'Antes do treino ou ao acordar · 18 min',
+    note:'Feita a seco. Lubrifica articulações e acorda o sistema nervoso. Em dias de treino substitui o aquecimento.',
+    items:[
+      { n:"Cat-Cow + rotação torácica",         sp:'3×8 respirações · 4 apoios',      d:'2 min', tp:'thoracic', c:'Expirar na flexão máxima, inspirar na extensão. Adicionar rotação lateral no topo.' },
+      { n:"CARs de quadril",                    sp:'5 círculos cada sentido × 2 pernas',d:'3 min', tp:'hip',      c:'Joelho a 90°, círculo lento e máximo do fémur. Pelvis fixa. O melhor exercício de saúde articular do quadril.' },
+      { n:"90/90 Hip Switch",                   sp:'2×10 transições lentas',           d:'2 min', tp:'hip',      c:'Ambos joelhos a 90°, transferir peso sem levantar ancas. Sente rotação interna e externa.' },
+      { n:"Mobilidade de tornozelo na parede",  sp:'2×10 cada pé · calcanhar fixo',   d:'2 min', tp:'ankle',    c:'Joelho avança para a parede. Aumentar distância gradualmente. Calcanhar no chão sempre.' },
+      { n:"World's greatest stretch",           sp:'6 reps cada lado · fluxo contínuo',d:'3 min', tp:'full',     c:'Fenda funda → cotovelo ao chão → rotação torácica → extensão de braço. O melhor exercício único para um futebolista.' },
+      { n:"Deep squat hold",                    sp:'3×30s · calcanhares no chão',      d:'2 min', tp:'hip',      c:'Cotovelos dentro dos joelhos a empurrar para fora. Se não conseguir manter calcanhares — placa fina por baixo.' },
+      { n:"Leg swings frente/trás + lateral",   sp:'12+12 cada perna · apoio na parede',d:'2 min',tp:'hamstring', c:'Amplitude crescente sem rotação de pelvis. Ativa isquiotibiais e adutores dinamicamente.' },
+    ]
+  },
+  pos: {
+    title:'Descompressão e alongamento', sub:'Imediatamente após cada sessão · 15 min',
+    note:'Músculos quentes = janela ideal para ganho de amplitude real. Mínimo 40s por posição. Em dias sem treino, fazer ao fim do dia.',
+    items:[
+      { n:'Piriforme figura-4',              sp:'2×50s cada lado · deitado',              d:'3 min', tp:'glute',     c:'Tornozelo sobre joelho oposto, puxar a coxa para o peito. Glúteo e rotadores externos — crítico para corredor com cortes.' },
+      { n:'Psoas em fenda baixa',            sp:'2×45s cada lado',                        d:'3 min', tp:'hip-flex',  c:'Joelho traseiro no chão, quadril avança. Braço oposto estende. Psoas curto = postura fletida + menor passada.' },
+      { n:'Isquiotibiais em pé + inclinação',sp:'2×45s cada lado · pé elevado no banco',  d:'3 min', tp:'hamstring', c:'Costas retas, inclinar o tronco. Cadeia posterior completa. Não arredondar a lombar.' },
+      { n:'Gémeo e solear no degrau',        sp:'45s joelho reto + 45s joelho fletido × 2 pés', d:'3 min', tp:'ankle', c:'Joelho reto = gastrocnémio. Joelho fletido = solear. Ambos próximos do FHL — sem bounce.' },
+      { n:'Extensão torácica no foam roller',sp:'2×40s · roller entre omoplatas',          d:'2 min', tp:'thoracic', c:'Rolar T4 a T8 lentamente. Braços cruzados ou mãos na nuca. Contrapõe postura de corrida prolongada.' },
+      { n:'Respiração diafragmática',        sp:'8-10 ciclos lentos · deitado',            d:'2 min', tp:'breath',   c:'Inspirar 4s pelo nariz (barriga sobe), expirar 6s pela boca. Ativa o parassimpático — acelera recuperação.' },
+    ]
+  },
+  noite: {
+    title:'Recuperação tissular e sono', sub:'30-60 min antes de dormir · 10 min',
+    note:'Curta mas consistente. Prepara o sistema nervoso para o sono reparador — onde acontece a síntese proteica e regeneração tendinosa.',
+    items:[
+      { n:'Foam roller planta do pé',          sp:'60s cada pé · pressão suave',    d:'2 min', tp:'ankle',    c:'Círculos lentos com bola de ténis ou roller. Estimula circulação na bainha do FHL.' },
+      { n:'Foam roller panturrilha medial',     sp:'60s cada perna · pausa em tender points', d:'2 min', tp:'ankle', c:'Gastrocnémio medial — percurso direto do FHL. Pausa 5-8s nos pontos de tensão.' },
+      { n:'Pernas na parede — viparita karani', sp:'3 min · deitado com pés na parede',d:'3 min', tp:'hamstring',c:'Drenagem linfática passiva dos membros inferiores. Reduz pernas pesadas. Um dos melhores exercícios de recuperação.' },
+      { n:'Respiração 4-7-8',                  sp:'5-6 ciclos',                     d:'2 min', tp:'breath',   c:'Inspirar 4s → segurar 7s → expirar 8s. Reduz cortisol residual. Direto para dormir.' },
+    ]
+  }
+};
+
+const fhl = {
+  intro:'Tenossinovite do flexor longo do hálux — bilateral. Protocolo de fortalecimento progressivo integrado no plano. Dor ao aumentar intensidade = sinal de adaptação, não de gravidade. Manter o protocolo consistentemente.',
+  phases:[
+    { label:'Fase 1 — Ativação pré-treino (Seg, Ter, Qui, Sáb)', steps:[
+      { t:'Foam roller planta do pé',          d:'60s lentos e circulares por cada pé. Foco no arco e calcanhar. Sem dor aguda.' },
+      { t:'Foam roller panturrilha medial',     d:'60s por perna. Gastrocnémio medial — percurso direto do FHL. Pausa 5-8s nos pontos tensos.' },
+      { t:'Mobilidade tornozelo na parede',    d:'2×10 por pé. Joelho avança com calcanhar fixo. Dorsiflexão progressiva — nunca forçar.' },
+      { t:'Rotação de tornozelo',              d:'10 círculos lentos cada sentido por cada pé. Lubrificação da bainha sinovial.' },
+    ]},
+    { label:'Fase 2 — Fortalecimento (Seg, Qui, Sáb)', steps:[
+      { t:'Excêntrico de panturrilha no degrau — unilateral', d:'3×12 cada pé. Subir bilateral · descer unilateral em 6 segundos. Com joelho reto (gastrocnémio) e depois joelho fletido (solear). Protocolo Alfredson modificado.' },
+      { t:'Towel scrunch / marble pick-up',    d:'2×30s cada pé. Dobrar toalha ou apanhar berlindes com os dedos. Força intrínseca plantar que sustenta o FHL.' },
+      { t:'Tibial Anterior',                  d:'3×1 min ou 3×15 conforme sessão. Antagonista direto do FHL — equilíbrio muscular essencial.' },
+    ]},
+    { label:'Fase 3 — Progressão (semanas 3-4, se assintomático)', steps:[
+      { t:'Calf raise unilateral com haltere', d:'Iniciar 4-6 kg, aumentar 1-2 kg/semana. Apenas se sem dor nos últimos 7 dias.' },
+      { t:'Hop unilateral controlado',         d:'3×5 por pé. Salto pequeno em antepé, aterrissagem suave. Apenas quando assintomático há 2+ semanas.' },
+    ]},
+  ],
+  alert:'· Dor > 4/10 durante o exercício\n· Dor persistente > 24h após treino\n· Crepitação aumentada ou edema visível\n· Dor matinal nos primeiros passos do dia'
+};
+
+// ── RENDER ──────────────────────────────────────────────────────────────
+function renderDay(key) {
+  const day = days[key];
+  let h = '';
+  if (day.fhl) h += `<div class="fhl-warn">⚑ Fazer protocolo FHL antes deste treino — ver aba Tendão FHL</div>`;
+  day.blocks.forEach(b => {
+    h += `<div class="blk-label">${b.label}</div>`;
+    b.exs.forEach(e => {
+      let tag = '';
+      if (e.tag === 'a') tag = `<div class="ec-tag tag-a">${e.tl}</div>`;
+      if (e.tag === 'f') tag = `<div class="ec-tag tag-f">${e.tl}</div>`;
+      h += `<div class="ec ${e.t}">
+        ${tag}
+        <div class="ec-name">${e.n}</div>
+        <div class="ec-meta">
+          <span class="chip hi">${e.s}</span>
+          <span class="chip">${e.c}</span>
+          <span class="chip">⏱ ${e.r}</span>
+        </div>
+        ${e.note ? `<div class="ec-note">${e.note}</div>` : ''}
+      </div>`;
+    });
+  });
+  document.getElementById('day-content').innerHTML = h;
+}
+
+function renderMob() {
+  ['manha','pos','noite'].forEach(k => {
+    const m = mob[k];
+    let h = `<div class="mob-hdr"><div class="mob-hdr-t">${m.title}</div><div class="mob-hdr-s">${m.sub}</div></div>
+      <div class="mob-note">${m.note}</div>`;
+    m.items.forEach(i => {
+      h += `<div class="mcard ${i.tp}">
+        <div class="mcard-dur">${i.d}</div>
+        <div class="mcard-name">${i.n}</div>
+        <div class="mcard-spec">${i.sp}</div>
+        <div class="mcard-cue">${i.c}</div>
+      </div>`;
+    });
+    document.getElementById('mc-' + k).innerHTML = h;
+  });
+}
+
+function renderFHL() {
+  let h = `<div class="fhl-intro">${fhl.intro}</div>`;
+  let n = 1;
+  fhl.phases.forEach(p => {
+    h += `<div class="fhl-phase">${p.label}</div>`;
+    p.steps.forEach(s => {
+      h += `<div class="fhl-step">
+        <div class="fhl-num">${n++}</div>
+        <div><div class="fhl-step-t">${s.t}</div><div class="fhl-step-d">${s.d}</div></div>
+      </div>`;
+    });
+  });
+  h += `<div class="fhl-alert"><strong>Sinais de alerta — consultar fisioterapeuta:</strong>${fhl.alert.split('\n').join('<br>')}</div>`;
+  document.getElementById('fhl-content').innerHTML = h;
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────
+function selSec(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function selDay(key, btn) {
+  document.querySelectorAll('.dp').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderDay(key);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selMob(key, btn) {
+  document.querySelectorAll('.mt').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mc').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mc-' + key).classList.add('active');
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────
+renderDay('seg');
+renderMob();
+renderFHL();
+</script>
+</body>
+</html>
